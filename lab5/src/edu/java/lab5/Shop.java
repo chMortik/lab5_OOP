@@ -4,10 +4,11 @@ import java.awt.*;
 import javax.swing.*;
 import javax.swing.table.*;
 import java.awt.event.*;
+import java.io.*;
 
 /**
  * @author Garifullin Marat
- * @version 1.4
+ * @version 1.5
  */
 public class Shop {
 	private JFrame shop;
@@ -160,18 +161,113 @@ public class Shop {
 	// Блоки прослушивания событий
 	public class FirstAction implements ActionListener {
 		public void actionPerformed(ActionEvent event) {
-			if (event.getSource() == save) {
-
-			} else if (event.getSource() == open) {
-
-			} else if (event.getSource() == add) {
+			if (event.getSource() == save) { //Сохранение в файл
+				int currentTable = tableNameBox.getSelectedIndex();
+				if (currentTable == 0) {
+					FileDialog saveFile = new FileDialog(shop, "Сохранение списка продавцов", FileDialog.SAVE);
+					saveFile.setVisible(true);
+					String fileName = saveFile.getDirectory() + saveFile.getFile();
+					if (fileName == null) return;
+					try {
+						BufferedWriter writer = new BufferedWriter(new FileWriter(fileName));
+						for (int i = 0; i < sellersModel.getRowCount(); ++i) {
+							for (int j = 0; j < sellersModel.getColumnCount(); ++j) {
+								writer.write((String) sellersModel.getValueAt(i, j));
+								writer.write("\n");
+							}
+						}
+						writer.close();
+					} catch (IOException ex) {
+						ex.printStackTrace();
+					}
+				}
+				else if(currentTable == 1) {
+					FileDialog saveFile = new FileDialog(shop, "Сохранение списка товаров", FileDialog.SAVE);
+					saveFile.setVisible(true);
+					String fileName = saveFile.getDirectory()+saveFile.getFile();
+					if(fileName == null) return;
+					try {
+						BufferedWriter writer = new BufferedWriter(new FileWriter(fileName));
+						for(int i = 0; i < productsModel.getRowCount(); ++i) {
+							for(int j = 0; j < productsModel.getColumnCount(); ++j) {
+								writer.write((String) productsModel.getValueAt(i, j));
+								writer.write("\n");
+							}
+						}
+						writer.close();
+					}
+					catch(IOException ex) {
+						ex.printStackTrace();
+					}
+				}
+			} else if (event.getSource() == open) { //Загрузка из файла
+				int currentTable = tableNameBox.getSelectedIndex();
+				if (currentTable == 0) {
+					FileDialog openFile = new FileDialog(shop, "Загрузка списка продавцов", FileDialog.LOAD);
+					openFile.setVisible(true);
+					String fileName = openFile.getDirectory() + openFile.getFile();
+					if (fileName == null) return;
+					try {
+						BufferedReader reader = new BufferedReader(new FileReader(fileName));
+						int rows = sellersModel.getRowCount();
+						for(int i = 0; i < rows; ++i) {
+							sellersModel.removeRow(0);
+						}
+						String seller;
+						do {
+							 seller = reader.readLine();
+							if(seller != null) {
+								String birthDate = reader.readLine();
+								String salary = reader.readLine();
+								sellersModel.addRow(new String[] {seller, birthDate, salary});
+							}
+						}while(seller != null);
+						reader.close();
+					} 
+					catch(FileNotFoundException ex) {
+						ex.printStackTrace();
+					}
+					catch (IOException ex) {
+						ex.printStackTrace();
+					}
+				}
+				else if(currentTable == 1) {
+					FileDialog openFile = new FileDialog(shop, "Загрузка списка товаров", FileDialog.LOAD);
+					openFile.setVisible(true);
+					String fileName = openFile.getDirectory()+openFile.getFile();
+					if(fileName == null) return;
+					try {
+						BufferedReader reader = new BufferedReader(new FileReader(fileName));
+						int rows = productsModel.getRowCount();
+						for(int i = 0; i < rows; ++i) {
+							productsModel.removeRow(0);
+						}
+						String product;
+						do {
+							 product = reader.readLine();
+							if(product != null) {
+								String price = reader.readLine();
+								String num = reader.readLine();
+								productsModel.addRow(new String[] {product, price, num});
+							}
+						}while(product != null);
+						reader.close();
+					} 
+					catch(FileNotFoundException ex) {
+						ex.printStackTrace();
+					}
+					catch (IOException ex) {
+						ex.printStackTrace();
+					}
+				}
+			} else if (event.getSource() == add) { //Добавление в таблицу
 				int currentTable = tableNameBox.getSelectedIndex();
 				if (currentTable == 0) {
 					SellerWindow seller = new SellerWindow();
 				} else if (currentTable == 1) {
 					ProductWindow product = new ProductWindow();
 				}
-			} else if (event.getSource() == delete) {
+			} else if (event.getSource() == delete) { //Удаление из таблицы
 				int currentTable = tableNameBox.getSelectedIndex();
 				if (currentTable == 0) {
 					int[] selectedRows = sellersTable.getSelectedRows();
@@ -194,11 +290,11 @@ public class Shop {
 						JOptionPane.showMessageDialog(shop, "Вы не выбрали строку для удаления!");
 					}
 				}
-			} else if (event.getSource() == edit) {
+			} else if (event.getSource() == edit) { //Изменение записи
 
-			} else if (event.getSource() == info) {
+			} else if (event.getSource() == info) { //Вывод информации о магазине
 
-			} else if (event.getSource() == tableNameBox) {
+			} else if (event.getSource() == tableNameBox) { //Смена таблиц
 				int selectedIndex = tableNameBox.getSelectedIndex(); // 0 - Продавцы, 1 - Товары
 				if (selectedIndex == 0) {
 					sellersScroll.setVisible(true);
@@ -224,7 +320,7 @@ public class Shop {
 		}
 	}
 
-	//Окно добавления продавца
+	// Окно добавления продавца
 	public class SellerWindow extends JFrame {
 		Container mainBox;
 		JPanel panel1, panel2, panel3;
@@ -252,7 +348,7 @@ public class Shop {
 			// Создание кнопки добавления
 			addSeller = new JButton("Добавить");
 
-			//Размещение элементов
+			// Размещение элементов
 			mainBox = this.getContentPane();
 			layout = new SpringLayout();
 			layout1 = new SpringLayout();
@@ -275,26 +371,26 @@ public class Shop {
 			mainBox.add(panel2);
 			mainBox.add(panel3);
 			mainBox.add(addSeller);
-			//Размещение panel1
+			// Размещение panel1
 			layout.putConstraint(SpringLayout.WEST, panel1, 5, SpringLayout.WEST, mainBox);
 			layout.putConstraint(SpringLayout.EAST, panel1, -5, SpringLayout.EAST, mainBox);
 			layout.putConstraint(SpringLayout.NORTH, panel1, 10, SpringLayout.NORTH, mainBox);
 			layout.putConstraint(SpringLayout.SOUTH, panel1, 35, SpringLayout.NORTH, panel1);
-			//Размещение panel2
+			// Размещение panel2
 			layout.putConstraint(SpringLayout.NORTH, panel2, 10, SpringLayout.SOUTH, panel1);
 			layout.putConstraint(SpringLayout.SOUTH, panel2, 35, SpringLayout.NORTH, panel2);
 			layout.putConstraint(SpringLayout.WEST, panel2, 5, SpringLayout.WEST, mainBox);
 			layout.putConstraint(SpringLayout.EAST, panel2, -5, SpringLayout.EAST, mainBox);
-			//Размещение panel3
+			// Размещение panel3
 			layout.putConstraint(SpringLayout.NORTH, panel3, 10, SpringLayout.SOUTH, panel2);
 			layout.putConstraint(SpringLayout.SOUTH, panel3, 35, SpringLayout.NORTH, panel3);
 			layout.putConstraint(SpringLayout.WEST, panel3, 5, SpringLayout.WEST, mainBox);
 			layout.putConstraint(SpringLayout.EAST, panel3, -5, SpringLayout.EAST, mainBox);
-			//Размещение кнопки addSeller
+			// Размещение кнопки addSeller
 			layout.putConstraint(SpringLayout.EAST, addSeller, -175, SpringLayout.EAST, mainBox);
 			layout.putConstraint(SpringLayout.SOUTH, addSeller, -10, SpringLayout.SOUTH, mainBox);
 			layout.putConstraint(SpringLayout.WEST, addSeller, 175, SpringLayout.WEST, mainBox);
-			//Размещение внутри panel1
+			// Размещение внутри panel1
 			layout1.putConstraint(SpringLayout.WEST, FIOLabel, 5, SpringLayout.WEST, panel1);
 			layout1.putConstraint(SpringLayout.NORTH, FIOLabel, 5, SpringLayout.NORTH, panel1);
 			layout1.putConstraint(SpringLayout.SOUTH, FIOLabel, -5, SpringLayout.SOUTH, panel1);
@@ -302,7 +398,7 @@ public class Shop {
 			layout1.putConstraint(SpringLayout.EAST, FIOField, -30, SpringLayout.EAST, panel1);
 			layout1.putConstraint(SpringLayout.SOUTH, FIOField, -5, SpringLayout.SOUTH, panel1);
 			layout1.putConstraint(SpringLayout.WEST, FIOField, 170, SpringLayout.WEST, panel1);
-			//Размещение внутри panel2
+			// Размещение внутри panel2
 			layout2.putConstraint(SpringLayout.WEST, birthDateLabel, 5, SpringLayout.WEST, panel2);
 			layout2.putConstraint(SpringLayout.NORTH, birthDateLabel, 5, SpringLayout.NORTH, panel2);
 			layout2.putConstraint(SpringLayout.SOUTH, birthDateLabel, -5, SpringLayout.SOUTH, panel2);
@@ -310,7 +406,7 @@ public class Shop {
 			layout2.putConstraint(SpringLayout.EAST, birthDateField, -30, SpringLayout.EAST, panel2);
 			layout2.putConstraint(SpringLayout.SOUTH, birthDateField, -5, SpringLayout.SOUTH, panel2);
 			layout2.putConstraint(SpringLayout.WEST, birthDateField, 170, SpringLayout.WEST, panel2);
-			//Размещение внутри panel3
+			// Размещение внутри panel3
 			layout3.putConstraint(SpringLayout.WEST, salaryLabel, 5, SpringLayout.WEST, panel3);
 			layout3.putConstraint(SpringLayout.NORTH, salaryLabel, 5, SpringLayout.NORTH, panel3);
 			layout3.putConstraint(SpringLayout.SOUTH, salaryLabel, -5, SpringLayout.SOUTH, panel3);
@@ -318,8 +414,8 @@ public class Shop {
 			layout3.putConstraint(SpringLayout.EAST, salaryField, -30, SpringLayout.EAST, panel3);
 			layout3.putConstraint(SpringLayout.SOUTH, salaryField, -5, SpringLayout.SOUTH, panel3);
 			layout3.putConstraint(SpringLayout.WEST, salaryField, 170, SpringLayout.WEST, panel3);
-			
-			//Добавление слушателей
+
+			// Добавление слушателей
 			addSeller.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent event) {
 					try {
@@ -334,50 +430,51 @@ public class Shop {
 						FIOField.setText("");
 						birthDateField.setText("");
 						salaryField.setText("");
-					}
-					catch(NullPointerException ex) {
+					} catch (NullPointerException ex) {
 						JOptionPane.showMessageDialog(shop, ex.toString());
-					}
-					catch(HaveDigit ex) {
+					} catch (HaveDigit ex) {
 						JOptionPane.showMessageDialog(shop, ex.toString());
-					}
-					catch(NumberFormatException ex) {
+					} catch (NumberFormatException ex) {
 						JOptionPane.showMessageDialog(shop, ex.toString());
 					}
 				}
 			});
 			this.setVisible(true);
 		}
-		//Проверка ФИО
-		private void checkName(JTextField textField) throws HaveDigit, NullPointerException
-		{
+
+		// Проверка ФИО
+		private void checkName(JTextField textField) throws HaveDigit, NullPointerException {
 			String name = textField.getText();
-			if (name.length() == 0) throw new NullPointerException();
-			for(int i = 0; i < name.length(); ++i) {
-				if(0 <= name.charAt(i) - '0' && name.charAt(i) - '0' <= 9) {
+			if (name.length() == 0)
+				throw new NullPointerException();
+			for (int i = 0; i < name.length(); ++i) {
+				if (0 <= name.charAt(i) - '0' && name.charAt(i) - '0' <= 9) {
 					throw new HaveDigit();
 				}
 			}
 		}
-		//Проверка даты рождения
-		private void checkBirthDate(JTextField textField) throws NullPointerException
-		{
+
+		// Проверка даты рождения
+		private void checkBirthDate(JTextField textField) throws NullPointerException {
 			String birthDate = textField.getText();
-			if(birthDate.length() == 0) throw new NullPointerException();
+			if (birthDate.length() == 0)
+				throw new NullPointerException();
 		}
-		//Проверка зарплаты
-		private void checkSalary(JTextField textField) throws NullPointerException, NumberFormatException
-		{
+
+		// Проверка зарплаты
+		private void checkSalary(JTextField textField) throws NullPointerException, NumberFormatException {
 			String salary = textField.getText();
-			if(salary.length() == 0) throw new NullPointerException();
-			for(int i = 0; i < salary.length(); ++i) {
-				if( salary.charAt(i) - '0' < 0  || salary.charAt(i) - '0' > 9) {
+			if (salary.length() == 0)
+				throw new NullPointerException();
+			for (int i = 0; i < salary.length(); ++i) {
+				if (salary.charAt(i) - '0' < 0 || salary.charAt(i) - '0' > 9) {
 					throw new NumberFormatException();
 				}
 			}
 		}
 	}
-	//Окно добавления товара
+
+	// Окно добавления товара
 	public class ProductWindow extends JFrame {
 		Container mainBox;
 		JPanel panel1, panel2, panel3;
@@ -405,7 +502,7 @@ public class Shop {
 			// Создание кнопки добавления
 			addProduct = new JButton("Добавить");
 
-			//Размещение элементов
+			// Размещение элементов
 			mainBox = this.getContentPane();
 			layout = new SpringLayout();
 			layout1 = new SpringLayout();
@@ -428,26 +525,26 @@ public class Shop {
 			mainBox.add(panel2);
 			mainBox.add(panel3);
 			mainBox.add(addProduct);
-			//Размещение panel1
+			// Размещение panel1
 			layout.putConstraint(SpringLayout.WEST, panel1, 5, SpringLayout.WEST, mainBox);
 			layout.putConstraint(SpringLayout.EAST, panel1, -5, SpringLayout.EAST, mainBox);
 			layout.putConstraint(SpringLayout.NORTH, panel1, 10, SpringLayout.NORTH, mainBox);
 			layout.putConstraint(SpringLayout.SOUTH, panel1, 35, SpringLayout.NORTH, panel1);
-			//Размещение panel2
+			// Размещение panel2
 			layout.putConstraint(SpringLayout.NORTH, panel2, 10, SpringLayout.SOUTH, panel1);
 			layout.putConstraint(SpringLayout.SOUTH, panel2, 35, SpringLayout.NORTH, panel2);
 			layout.putConstraint(SpringLayout.WEST, panel2, 5, SpringLayout.WEST, mainBox);
 			layout.putConstraint(SpringLayout.EAST, panel2, -5, SpringLayout.EAST, mainBox);
-			//Размещение panel3
+			// Размещение panel3
 			layout.putConstraint(SpringLayout.NORTH, panel3, 10, SpringLayout.SOUTH, panel2);
 			layout.putConstraint(SpringLayout.SOUTH, panel3, 35, SpringLayout.NORTH, panel3);
 			layout.putConstraint(SpringLayout.WEST, panel3, 5, SpringLayout.WEST, mainBox);
 			layout.putConstraint(SpringLayout.EAST, panel3, -5, SpringLayout.EAST, mainBox);
-			//Размещение кнопки addSeller
+			// Размещение кнопки addSeller
 			layout.putConstraint(SpringLayout.EAST, addProduct, -175, SpringLayout.EAST, mainBox);
 			layout.putConstraint(SpringLayout.SOUTH, addProduct, -10, SpringLayout.SOUTH, mainBox);
 			layout.putConstraint(SpringLayout.WEST, addProduct, 175, SpringLayout.WEST, mainBox);
-			//Размещение внутри panel1
+			// Размещение внутри panel1
 			layout1.putConstraint(SpringLayout.WEST, productNameLabel, 5, SpringLayout.WEST, panel1);
 			layout1.putConstraint(SpringLayout.NORTH, productNameLabel, 5, SpringLayout.NORTH, panel1);
 			layout1.putConstraint(SpringLayout.SOUTH, productNameLabel, -5, SpringLayout.SOUTH, panel1);
@@ -455,7 +552,7 @@ public class Shop {
 			layout1.putConstraint(SpringLayout.EAST, productNameField, -30, SpringLayout.EAST, panel1);
 			layout1.putConstraint(SpringLayout.SOUTH, productNameField, -5, SpringLayout.SOUTH, panel1);
 			layout1.putConstraint(SpringLayout.WEST, productNameField, 170, SpringLayout.WEST, panel1);
-			//Размещение внутри panel2
+			// Размещение внутри panel2
 			layout2.putConstraint(SpringLayout.WEST, priceLabel, 5, SpringLayout.WEST, panel2);
 			layout2.putConstraint(SpringLayout.NORTH, priceLabel, 5, SpringLayout.NORTH, panel2);
 			layout2.putConstraint(SpringLayout.SOUTH, priceLabel, -5, SpringLayout.SOUTH, panel2);
@@ -463,7 +560,7 @@ public class Shop {
 			layout2.putConstraint(SpringLayout.EAST, priceField, -30, SpringLayout.EAST, panel2);
 			layout2.putConstraint(SpringLayout.SOUTH, priceField, -5, SpringLayout.SOUTH, panel2);
 			layout2.putConstraint(SpringLayout.WEST, priceField, 170, SpringLayout.WEST, panel2);
-			//Размещение внутри panel3
+			// Размещение внутри panel3
 			layout3.putConstraint(SpringLayout.WEST, numLabel, 5, SpringLayout.WEST, panel3);
 			layout3.putConstraint(SpringLayout.NORTH, numLabel, 5, SpringLayout.NORTH, panel3);
 			layout3.putConstraint(SpringLayout.SOUTH, numLabel, -5, SpringLayout.SOUTH, panel3);
@@ -471,8 +568,8 @@ public class Shop {
 			layout3.putConstraint(SpringLayout.EAST, numField, -30, SpringLayout.EAST, panel3);
 			layout3.putConstraint(SpringLayout.SOUTH, numField, -5, SpringLayout.SOUTH, panel3);
 			layout3.putConstraint(SpringLayout.WEST, numField, 170, SpringLayout.WEST, panel3);
-			
-			//Добавление слушателей
+
+			// Добавление слушателей
 			addProduct.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent event) {
 					try {
@@ -487,55 +584,56 @@ public class Shop {
 						productNameField.setText("");
 						priceField.setText("");
 						numField.setText("");
-					}
-					catch(NullPointerException ex) {
+					} catch (NullPointerException ex) {
 						JOptionPane.showMessageDialog(shop, ex.toString());
-					}
-					catch(NumberFormatException ex) {
+					} catch (NumberFormatException ex) {
 						JOptionPane.showMessageDialog(shop, ex.toString());
 					}
 				}
 			});
 			this.setVisible(true);
 		}
-		
-		//Проверка названия товара
-		private void checkProductName(JTextField textField) throws NullPointerException
-		{
+
+		// Проверка названия товара
+		private void checkProductName(JTextField textField) throws NullPointerException {
 			String productName = textField.getText();
-			if(productName.length() == 0) throw new NullPointerException();
+			if (productName.length() == 0)
+				throw new NullPointerException();
 		}
-		//Проверка цены товара
-		private void checkPrice(JTextField textField) throws NullPointerException, NumberFormatException
-		{
+
+		// Проверка цены товара
+		private void checkPrice(JTextField textField) throws NullPointerException, NumberFormatException {
 			String price = textField.getText();
-			if(price.length() == 0) throw new NullPointerException();
-			for(int i = 0; i < price.length(); ++i) {
-				if( price.charAt(i) - '0' < 0  || price.charAt(i) - '0' > 9) {
+			if (price.length() == 0)
+				throw new NullPointerException();
+			for (int i = 0; i < price.length(); ++i) {
+				if (price.charAt(i) - '0' < 0 || price.charAt(i) - '0' > 9) {
 					throw new NumberFormatException();
 				}
 			}
 		}
-		//Проверка количества товара
-		private void checkProductNum(JTextField textField) throws NullPointerException, NumberFormatException
-		{
+
+		// Проверка количества товара
+		private void checkProductNum(JTextField textField) throws NullPointerException, NumberFormatException {
 			String productNum = textField.getText();
-			if(productNum.length() == 0) throw new NullPointerException();
-			for(int i = 0; i < productNum.length(); ++i) {
-				if( productNum.charAt(i) - '0' < 0  || productNum.charAt(i) - '0' > 9) {
+			if (productNum.length() == 0)
+				throw new NullPointerException();
+			for (int i = 0; i < productNum.length(); ++i) {
+				if (productNum.charAt(i) - '0' < 0 || productNum.charAt(i) - '0' > 9) {
 					throw new NumberFormatException();
 				}
 			}
 		}
 	}
-	
-	//Классы исключений
-	//Класс исключения, возникающего, когда в строке содержатся цифры
-	private class HaveDigit extends Exception{
+
+	// Классы исключений
+	// Класс исключения, возникающего, когда в строке содержатся цифры
+	private class HaveDigit extends Exception {
 		public HaveDigit() {
 			super("Введённая строка содержит цифры");
 		}
 	}
+
 	/**
 	 * @param args - вводимая строка
 	 */
